@@ -24,6 +24,17 @@ docker compose up -d --build
 Сбросить базу к демо-состоянию: `docker compose down -v && docker compose up -d`.
 Пароль БД и ключ токенов можно задать в `.env` рядом с `docker-compose.yml` (`POSTGRES_PASSWORD`, `CLINIC_SECRET_KEY`).
 
+### Публичный доступ через Cloudflare Tunnel
+
+```bash
+docker compose --profile tunnel up -d
+docker compose logs tunnel | grep trycloudflare     # публичный адрес https://….trycloudflare.com
+docker compose stop tunnel                           # закрыть доступ из интернета
+```
+
+Quick Tunnel не требует аккаунта Cloudflare; адрес меняется при каждом перезапуске контейнера `tunnel`.
+Перед открытием наружу смените демонстрационные пароли.
+
 ## Запуск без Docker
 
 Нужны Python 3.11+ и Node.js 20+. Без Docker используется SQLite (`backend/clinic.db`).

@@ -49,5 +49,15 @@ services:
     ports:
       - "3000:3000"
 
+  # Публичный адрес через Cloudflare Quick Tunnel (без аккаунта, адрес *.trycloudflare.com меняется при перезапуске).
+  # Запуск: docker compose --profile tunnel up -d   ·  адрес: docker compose logs tunnel | grep trycloudflare
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    profiles: ["tunnel"]
+    restart: unless-stopped
+    command: tunnel --no-autoupdate --url http://frontend:3000
+    depends_on:
+      - frontend
+
 volumes:
   pgdata:
