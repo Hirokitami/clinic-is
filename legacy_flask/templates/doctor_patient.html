@@ -1,0 +1,8 @@
+{% extends "base.html" %}{% block title %}История пациента{% endblock %}
+{% block content %}
+<h1>История пациента: {{ fio(p) }}</h1>
+<div class="kv"><div>Дата рождения</div><div>{{ p.birth_date|dmy }}</div><div>ИИН</div><div>{{ p.iin }}</div><div>Пол</div><div>{{ p.sex or '—' }}</div></div>
+<div class="actions">{% if appt %}<a class="btn primary" href="{{ url_for('doctor_visit', appt_no=appt) }}">Перейти к приёму</a>{% endif %}
+<a class="btn" href="{{ url_for('doctor_day') }}">К списку пациентов</a></div>
+{% include "_history.html" %}
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends "base.html" %}{% block title %}Список записей{% endblock %}
+{% block content %}
+<h1>Список записей на приём</h1>
+<form method="get" class="row">
+  <label>Дата<input type="date" name="day" value="{{ flt.day }}"></label>
+  <label>Врач<select name="doc"><option value="">все врачи</option>{% for d in doctors %}<option value="{{ d.tab_no }}" {{ 'selected' if d.tab_no==flt.doc }}>{{ d.last_name }} {{ d.first_name[0] }}. – {{ d.spec_name }}</option>{% endfor %}</select></label>
+  <label>ИИН пациента (все даты)<input name="iin" value="{{ flt.iin }}" maxlength="12"></label>
+  <label>Статус<select name="status"><option value="">любой</option>{% for s in statuses %}<option value="{{ s.status_code }}" {{ 'selected' if s.status_code==flt.status }}>{{ s.name }}</option>{% endfor %}</select></label>
+  <button class="primary" type="submit">Показать</button>
+</form>
+<table class="grid"><tr><th>Номер</th><th>Дата, время</th><th>Пациент</th><th>Врач</th><th>Каб.</th><th>Причина обращения</th><th>Статус</th><th>Действия</th></tr>
+{% for a in rows %}<tr><td>{{ a.appt_no }}</td><td>{{ a.slot_date|dmy }} {{ a.time_start }}</td><td>{{ fio(a) }}<br><span class="muted">{{ a.iin }}</span></td>
+  <td>{{ a.d_last_name }} {{ a.d_first_name[0] }}.{{ (a.d_middle_name or ' ')[0] }}.<br><span class="muted">{{ a.spec_name }}</span></td><td>{{ a.cabinet_no }}</td><td>{{ a.reason }}</td>
+  <td><span class="tag {{ a.status_code }}">{{ a.status_name }}</span></td>
+  <td>{% if a.status_code == 'PLANNED' %}<div class="actions" style="margin:0">
+    <a class="btn" href="{{ url_for('appointment_ticket', appt_no=a.appt_no) }}" target="_blank">Талон</a>
+    {% if STAGE >= 3 %}<a class="btn" href="{{ url_for('appointment_reschedule', appt_no=a.appt_no) }}">Перенести</a>{% endif %}
+    <form method="post" action="{{ url_for('appointment_cancel', appt_no=a.appt_no) }}" onsubmit="return confirm('Отменить запись {{ a.appt_no }}?')">
+      <input type="hidden" name="back" value="{{ request.full_path }}"><button class="danger">Отменить</button></form></div>{% endif %}</td></tr>
+{% else %}<tr><td colspan="8" class="muted">Записей по заданным условиям нет</td></tr>{% endfor %}</table>
+<p class="muted">Всего: {{ rows|length }}</p>
+{% endblock %}

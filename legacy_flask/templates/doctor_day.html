@@ -1,0 +1,14 @@
+{% extends "base.html" %}{% block title %}Приём пациентов{% endblock %}
+{% block content %}
+<h1>Пациенты на приём – {{ day|ru_date(true) }}</h1>
+<form method="get" class="row"><label>Дата<input type="date" name="day" value="{{ day }}"></label><button type="submit">Показать</button></form>
+<table class="grid"><tr><th>Время</th><th>Пациент</th><th>Причина обращения</th><th>Статус</th><th>Действия</th></tr>
+{% for r in rows %}<tr class="{{ '' if r.appt_no else 'busy' }}"><td>{{ r.time_start }}–{{ r.time_end }}</td>
+  <td>{% if r.appt_no %}<b>{{ fio(r) }}</b><br><span class="muted">{{ r.birth_date|dmy }}, ИИН {{ r.iin }}</span>{% else %}<span class="muted">свободно</span>{% endif %}</td>
+  <td>{{ r.reason or '' }}</td><td>{% if r.appt_no %}<span class="tag {{ r.status_code }}">{{ r.status_name }}</span>{% endif %}</td>
+  <td>{% if r.appt_no %}<div class="actions" style="margin:0">
+    <a class="btn" href="{{ url_for('doctor_patient', iin=r.iin, appt=r.appt_no) }}">История</a>
+    {% if r.status_code=='PLANNED' %}<a class="btn primary" href="{{ url_for('doctor_visit', appt_no=r.appt_no) }}">Начать приём</a>
+    <form method="post" action="{{ url_for('doctor_noshow', appt_no=r.appt_no) }}" onsubmit="return confirm('Отметить неявку пациента {{ fio(r) }} на {{ r.time_start }}?')"><button>Неявка</button></form>{% endif %}</div>{% endif %}</td></tr>
+{% else %}<tr><td colspan="5" class="muted">В этот день приёма нет</td></tr>{% endfor %}</table>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "base.html" %}{% block title %}{{ 'Регистрация пациента' if new else 'Электронная карта пациента' }}{% endblock %}
+{% block content %}
+<h1>{{ 'Регистрация пациента' if new else 'Электронная карта пациента' }}</h1>
+{% if errors %}<div class="msgs"><div class="msg error">Карта не сохранена: исправьте выделенные поля.</div></div>{% endif %}
+{% if existing %}<div class="msg warn">Карта с ИИН {{ existing.iin }} уже существует: <b>{{ fio(existing) }}</b>, {{ existing.birth_date|dmy }}.
+  Вторая карта не создаётся (Т1). <a class="btn" href="{{ url_for('patient_edit', iin=existing.iin) }}">Открыть карту</a>
+  <a class="btn" href="{{ url_for('appointment_form', pid=existing.iin) }}">Записать на приём</a></div>{% endif %}
+<form method="post">
+<fieldset><legend>Идентификация</legend><div class="row">
+  <label class="{{ 'field-error' if errors.iin }}">ИИН <span class="req-star">*</span>
+    <input name="iin" value="{{ data.iin }}" maxlength="12" {{ 'readonly' if not new }} placeholder="12 цифр">{% if errors.iin %}<span class="ferr">{{ errors.iin }}</span>{% endif %}</label>
+  <label>Вид документа<select name="doc_type">{% for t in ['', 'Удостоверение личности', 'Паспорт РК', 'Вид на жительство'] %}<option {{ 'selected' if data.doc_type==t }}>{{ t }}</option>{% endfor %}</select></label>
+  <label>Номер документа<input name="doc_no" value="{{ data.doc_no or '' }}"></label>
+  {% if not new %}<label>Дата регистрации<input readonly value="{{ data.reg_date|dmy }}"></label>{% endif %}
+</div></fieldset>
+<fieldset><legend>Персональные данные</legend><div class="row">
+  {% for key, name in [('last_name','Фамилия'),('first_name','Имя'),('middle_name','Отчество')] %}
+  <label class="{{ 'field-error' if errors[key] }}">{{ name }}{% if key!='middle_name' %} <span class="req-star">*</span>{% endif %}
+    <input name="{{ key }}" value="{{ data[key] or '' }}">{% if errors[key] %}<span class="ferr">{{ errors[key] }}</span>{% endif %}</label>{% endfor %}
+  <label class="{{ 'field-error' if errors.birth_date }}">Дата рождения <span class="req-star">*</span>
+    <input type="date" name="birth_date" value="{{ data.birth_date or '' }}" max="{{ today() }}">{% if errors.birth_date %}<span class="ferr">{{ errors.birth_date }}</span>{% endif %}</label>
+  <label>Пол<select name="sex">{% for v in ['', 'Ж', 'М'] %}<option {{ 'selected' if data.sex==v }}>{{ v }}</option>{% endfor %}</select></label>
+</div><div class="row">
+  <label class="{{ 'field-error' if errors.mobile_phone }}">Мобильный телефон <span class="req-star">*</span>
+    <input name="mobile_phone" value="{{ data.mobile_phone or '' }}" placeholder="+7 701 234 56 78">{% if errors.mobile_phone %}<span class="ferr">{{ errors.mobile_phone }}</span>{% endif %}</label>
+  <label>Адрес проживания<input name="address" value="{{ data.address or '' }}" style="width:420px"></label>
+</div>
+<div class="muted"><span class="req-star">*</span> – обязательные поля (Т3). ИИН после регистрации не изменяется.</div></fieldset>
+<div class="actions"><button class="primary" type="submit">{{ 'Зарегистрировать' if new else 'Сохранить изменения' }}</button>
+  {% if not new %}<a class="btn" href="{{ url_for('appointment_form', pid=data.iin) }}">Записать на приём</a>{% endif %}
+  <a class="btn" href="{{ url_for('index') }}">Отмена</a></div>
+</form>
+{% if not new %}<h2>Записи пациента</h2>
+<table class="grid"><tr><th>Номер</th><th>Дата и время</th><th>Врач</th><th>Кабинет</th><th>Статус</th></tr>
+{% for a in appts %}<tr><td>{{ a.appt_no }}</td><td>{{ a.slot_date|dmy }} {{ a.time_start }}</td><td>{{ a.d_last_name }} {{ a.d_first_name[0] }}.{{ (a.d_middle_name or ' ')[0] }}.</td><td>{{ a.cabinet_no }}</td><td><span class="tag {{ a.status_code }}">{{ a.status_name }}</span></td></tr>
+{% else %}<tr><td colspan="5" class="muted">Записей нет</td></tr>{% endfor %}</table>{% endif %}
+{% endblock %}

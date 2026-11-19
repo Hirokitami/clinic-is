@@ -1,0 +1,17 @@
+{% extends "base.html" %}{% block title %}Талон на приём{% endblock %}
+{% block content %}
+<div class="ticket">
+  <h2>ТАЛОН НА ПРИЁМ № {{ a.appt_no }}</h2>
+  <div class="kv">
+    <div>Пациент</div><div><b>{{ fio(a) }}</b></div>
+    <div>Врач</div><div>{{ a.spec_name }} {{ a.d_last_name }} {{ a.d_first_name }} {{ a.d_middle_name or '' }}</div>
+    <div>Дата</div><div><b>{{ a.slot_date|ru_date(true) }}</b></div>
+    <div>Время</div><div><b>{{ a.time_start }}</b> – {{ a.time_end }}</div>
+    <div>Кабинет</div><div><b>{{ a.cabinet_no }}</b>, {{ a.floor_no }} этаж</div>
+    <div>Причина обращения</div><div>{{ a.reason }}</div>
+    <div>Статус</div><div>{{ a.status_name }}</div>
+  </div>
+  <p class="muted">Просим прийти за 10 минут до начала приёма. При необходимости отменить или перенести запись позвоните в регистратуру.</p>
+</div>
+<div class="actions noprint" style="justify-content:center"><button class="primary" onclick="window.print()">Печать</button></div>
+{% endblock %}

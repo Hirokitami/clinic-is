@@ -1,0 +1,13 @@
+{% extends "base.html" %}{% block title %}Личный кабинет{% endblock %}
+{% block content %}
+<h1>Личный кабинет: {{ fio(p) }}</h1>
+<h2>Мои записи</h2>
+<table class="grid"><tr><th>Номер</th><th>Дата, время</th><th>Врач</th><th>Кабинет</th><th>Статус</th><th></th></tr>
+{% for a in appts %}<tr><td>{{ a.appt_no }}</td><td>{{ a.slot_date|dmy }} {{ a.time_start }}</td><td>{{ a.spec_name }} {{ a.d_last_name }} {{ a.d_first_name[0] }}.{{ (a.d_middle_name or ' ')[0] }}.</td>
+<td>{{ a.cabinet_no }}</td><td><span class="tag {{ a.status_code }}">{{ a.status_name }}</span></td>
+<td>{% if a.status_code=='PLANNED' %}<div class="actions" style="margin:0"><a class="btn" href="{{ url_for('appointment_ticket', appt_no=a.appt_no) }}" target="_blank">Талон</a>
+<form method="post" action="{{ url_for('appointment_cancel', appt_no=a.appt_no) }}" onsubmit="return confirm('Отменить запись?')"><input type="hidden" name="back" value="{{ url_for('patient_cabinet') }}"><button class="danger">Отменить</button></form></div>{% endif %}</td></tr>
+{% else %}<tr><td colspan="6" class="muted">Записей нет</td></tr>{% endfor %}</table>
+<p class="muted">Записаться на приём можно через регистратуру. Самостоятельная запись в личном кабинете не реализована в текущей версии.</p>
+{% include "_history.html" %}
+{% endblock %}

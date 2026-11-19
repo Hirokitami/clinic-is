@@ -1,0 +1,12 @@
+<h2>Приёмы и диагнозы</h2>
+<table class="grid"><tr><th>Дата</th><th>Врач</th><th>Жалобы</th><th>Диагноз (МКБ-10)</th><th>Заключение</th></tr>
+{% for v in visits %}<tr><td>{{ v.finished_at|dmy }}</td><td>{{ v.spec_name }} {{ v.d_last_name }} {{ v.d_first_name[0] }}.</td><td>{{ v.complaints }}</td>
+<td><b>{{ v.icd_code }}</b> {{ v.diag_name }}</td><td>{{ v.conclusion or '' }}</td></tr>{% else %}<tr><td colspan="5" class="muted">Приёмов нет</td></tr>{% endfor %}</table>
+<h2>Назначения</h2>
+<table class="grid"><tr><th>Номер</th><th>Процедура</th><th>Сеансы (выполнено / назначено)</th><th>Указания врача</th><th>Назначено</th></tr>
+{% for r in rx %}<tr><td>{{ r.rx_no }}</td><td>{{ r.proc_name }}</td><td>{{ r.done_count }} / {{ r.sessions }}</td><td>{{ r.instructions or '' }}</td><td>{{ r.created_at|dmy }}</td></tr>
+{% else %}<tr><td colspan="5" class="muted">Назначений нет</td></tr>{% endfor %}</table>
+<h2>Результаты исследований</h2>
+<table class="grid"><tr><th>Дата</th><th>Исследование</th><th>Результат / заключение</th></tr>
+{% for t in tests %}<tr><td>{{ t.done_date|dmy }}</td><td>{{ t.test_name }}</td><td>{{ t.value_text }}</td></tr>
+{% else %}<tr><td colspan="3" class="muted">Результатов нет</td></tr>{% endfor %}</table>

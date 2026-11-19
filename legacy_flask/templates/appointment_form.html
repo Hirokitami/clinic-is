@@ -1,0 +1,105 @@
+{% extends "base.html" %}{% block title %}Запись на приём{% endblock %}
+{% block content %}
+<h1>Запись на приём</h1>
+{% if messages %}<div class="msgs" id="messages">{% for kind, text in messages %}<div class="msg {{ kind }}">{{ text }}
+  {% if offer_registration and STAGE >= 2 %} <a class="btn" href="{{ url_for('patient_new', iin=iin) }}">Зарегистрировать пациента</a>{% endif %}</div>{% endfor %}</div>{% endif %}
+
+{# ---------------- Блок 1. Пациент ---------------- #}
+<fieldset><legend>1. Пациент</legend>
+{% if patient %}
+  <div class="row">
+    <label>ИИН<input value="{{ patient.iin }}" readonly></label>
+    <label>ФИО<input value="{{ fio(patient) }}" readonly style="width:300px"></label>
+    <label>Дата рождения<input value="{{ patient.birth_date|dmy }}" readonly></label>
+    <label>Телефон<input value="{{ patient.mobile_phone }}" readonly></label>
+    <a class="btn" href="{{ url_for('appointment_form') }}">Другой пациент</a>
+  </div>
+  <div class="muted">Пациент подтверждён оператором. Данные взяты из электронной карты и повторно не вводятся (Т3).</div>
+{% else %}
+  <form method="get" class="row">
+    <input type="hidden" name="action" value="find">
+    <label>ИИН пациента <span class="req-star">*</span><input name="iin" value="{{ iin }}" maxlength="12" placeholder="12 цифр"></label>
+    <button class="primary" type="submit">Найти</button>
+  </form>
+  <form method="get" class="row">
+    <input type="hidden" name="action" value="find_fio">
+    <label>ФИО (фамилия, имя)<input name="fio_q" value="{{ fio_q }}" placeholder="Ахметова Дана" style="width:240px"></label>
+    <label>Дата рождения<input type="date" name="birth_q" value="{{ birth_q }}"></label>
+    <button type="submit">Поиск по ФИО и дате</button>
+  </form>
+  {% if candidate %}
+  <div class="kv" style="margin:8px 0"><div>ФИО</div><div><b>{{ fio(candidate) }}</b></div>
+    <div>Дата рождения</div><div>{{ candidate.birth_date|dmy }}</div><div>Телефон</div><div>{{ candidate.mobile_phone }}</div></div>
+  <a class="btn primary" href="{{ url_for('appointment_form', pid=candidate.iin) }}">Данные верны</a>
+  {% endif %}
+  {% if found %}<table class="grid"><tr><th>ИИН</th><th>ФИО</th><th>Дата рождения</th><th>Телефон</th><th></th></tr>
+    {% for p in found %}<tr><td>{{ p.iin }}</td><td>{{ fio(p) }}</td><td>{{ p.birth_date|dmy }}</td><td>{{ p.mobile_phone }}</td>
+    <td><a class="btn" href="{{ url_for('appointment_form', pid=p.iin) }}">Выбрать</a></td></tr>{% endfor %}</table>{% endif %}
+{% endif %}
+</fieldset>
+
+{# ---------------- Блок 2. Врач и дата приёма ---------------- #}
+<fieldset {% if not patient %}disabled{% endif %}><legend>2. Врач и дата приёма</legend>
+  <form method="get" class="row" id="docform">
+    <input type="hidden" name="pid" value="{{ pid }}">
+    <label>Специальность<select name="spec" onchange="this.form.doc.value='';this.form.submit()">
+      <option value="">— выберите —</option>
+      {% for s in specialties %}<option value="{{ s.specialty_code }}" {{ 'selected' if s.specialty_code==spec }}>{{ s.name }}</option>{% endfor %}</select></label>
+    <label>Врач<select name="doc" onchange="this.form.submit()">
+      <option value="">— выберите —</option>
+      {% for d in doctors %}<option value="{{ d.tab_no }}" {{ 'selected' if d.tab_no==doc }}>{{ fio(d) }} (каб. {{ d.cabinet_no }})</option>{% endfor %}</select></label>
+    <label>Дата приёма<input type="date" name="day" value="{{ day }}" min="{{ today() }}"></label>
+    <button type="submit">Показать расписание</button>
+    <button type="submit" name="near" value="1">Ближайшие свободные</button>
+  </form>
+  {% if nearest is not none %}
+    <h2>Ближайшие даты со свободными интервалами</h2>
+    {% if nearest %}<table class="grid" style="width:auto"><tr><th>Дата</th><th>Свободных интервалов</th><th>Первое свободное время</th><th></th></tr>
+    {% for n in nearest %}<tr><td>{{ n.slot_date|ru_date(true) }}</td><td>{{ n.free_count }}</td><td>{{ n.first_time }}</td>
+      <td><a class="btn" href="{{ url_for('appointment_form', pid=pid, spec=spec, doc=doc, day=n.slot_date) }}">Выбрать дату</a></td></tr>{% endfor %}</table>
+    {% else %}<div class="msg warn">У врача нет свободных интервалов в ближайшие дни.</div>{% endif %}
+  {% endif %}
+  {% if slots %}
+  <h2>Расписание врача {{ fio(doctor) }} на {{ day|ru_date(true) }}</h2>
+  <table class="grid"><tr><th>Время начала</th><th>Время окончания</th><th>Кабинет</th><th>Состояние</th><th>Выбор</th></tr>
+  {% for s in slots %}{% set ok = is_bookable(s) %}
+    <tr class="{{ 'sel' if s.slot_id==slot else ('free' if ok else ('busy' if s.is_busy else 'past')) }}">
+      <td>{{ s.time_start }}</td><td>{{ s.time_end }}</td><td>{{ s.cabinet_no }} ({{ s.floor_no }} этаж)</td>
+      <td>{% if s.is_busy %}<span class="tag busy">занят</span>{% elif ok %}<span class="tag free">свободен</span>{% else %}<span class="muted">время прошло</span>{% endif %}</td>
+      <td>{% if ok %}{% if s.slot_id==slot %}✔ выбран{% else %}<a class="btn" href="{{ url_for('appointment_form', pid=pid, spec=spec, doc=doc, day=day, slot=s.slot_id) }}">Выбрать</a>{% endif %}{% endif %}</td></tr>
+  {% endfor %}</table>
+  {% endif %}
+</fieldset>
+
+{# ---------------- Блок 3. Данные записи ---------------- #}
+<fieldset {% if not selected and not created %}disabled{% endif %}><legend>3. Данные записи</legend>
+{% if confirm_existing %}
+  <div class="msg warn">У пациента уже есть действующая запись к этому врачу: {{ confirm_existing.slot_date|ru_date }} в {{ confirm_existing.time_start }}
+    (№ {{ confirm_existing.appt_no }}). Создать новую запись?</div>
+{% endif %}
+<form method="post" action="{{ url_for('appointment_create') }}">
+  {% for n, v in [('pid',pid),('spec',spec),('doc',doc),('day',day),('slot',slot)] %}<input type="hidden" name="{{ n }}" value="{{ v }}">{% endfor %}
+  <div class="row">
+    <label>Время приёма<input readonly value="{% if created %}{{ created.slot_date|dmy }} {{ created.time_start }}–{{ created.time_end }}{% elif selected %}{{ selected.slot_date|dmy }} {{ selected.time_start }}–{{ selected.time_end }}{% endif %}" style="width:200px"></label>
+    <label>Кабинет<input readonly value="{% if created %}{{ created.cabinet_no }} ({{ created.floor_no }} этаж){% elif selected %}{{ selected.cabinet_no }} ({{ selected.floor_no }} этаж){% endif %}"></label>
+    <label>Статус записи<input readonly value="{{ created.status_name if created else '' }}"></label>
+    {% if created %}<label>Номер записи<input readonly value="{{ created.appt_no }}"></label>{% endif %}
+  </div>
+  <div class="{{ 'field-error' if reason_error }}"><label>Причина обращения <span class="req-star">*</span>
+    <textarea name="reason" {{ 'readonly' if created }}>{{ created.reason if created else reason }}</textarea></label></div>
+  <div class="actions">
+  {% if confirm_existing %}
+    <button class="primary" name="confirm" value="yes">Создать новую запись</button>
+    <button name="confirm" value="no">Не создавать</button>
+  {% elif not created %}
+    <button class="primary" type="submit">Записать</button>
+  {% endif %}
+  {% if created %}<a class="btn primary" href="{{ url_for('appointment_ticket', appt_no=created.appt_no) }}" target="_blank">Печать талона</a>
+    <a class="btn" href="{{ url_for('appointment_form') }}">Новая запись</a>{% else %}
+    <button type="button" disabled>Печать талона</button>{% endif %}
+    <a class="btn" href="{{ url_for('index') }}">Отмена</a>
+  </div>
+</form>
+</fieldset>
+{% endblock %}
+{% block status %}{% if messages %}{{ messages[-1][1] }}{% else %}Заполните блоки формы по порядку: пациент → врач и дата → данные записи{% endif %}{% endblock %}

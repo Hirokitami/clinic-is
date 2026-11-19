@@ -1,0 +1,20 @@
+{% extends "base.html" %}{% block title %}Главное окно{% endblock %}
+{% block content %}
+<h1>Здравствуйте, {{ user.display_name }}</h1>
+<p class="muted">Роль: {{ ROLE_NAMES[user.role_code] }}. Показаны разделы, доступные вашей роли.</p>
+<div class="tiles">
+{% if user.role_code == 'OPERATOR' %}
+  <a class="tile {{ 'off' if STAGE < 2 }}" href="{{ url_for('patient_new') if STAGE >= 2 else '#' }}"><b>Регистрация пациента</b><small>Поиск карты по ИИН, открытие электронной карты{% if STAGE < 2 %} — в разработке{% endif %}</small></a>
+  <a class="tile" href="{{ url_for('appointment_form') }}"><b>Запись на приём</b><small>Пациент → врач и дата → свободный интервал</small></a>
+  <a class="tile {{ 'off' if STAGE < 2 }}" href="{{ url_for('appointments_list') if STAGE >= 2 else '#' }}"><b>Список записей</b><small>Просмотр, {% if STAGE >= 3 %}перенос и {% endif %}отмена записей{% if STAGE < 2 %} — в разработке{% endif %}</small></a>
+  <a class="tile" href="{{ url_for('sms_log') }}"><b>Журнал SMS</b><small>Отправленные пациентам подтверждения</small></a>
+  <div class="tile"><b>Сегодня</b><small>Запланировано записей: {{ stats.today }}<br>Электронных карт: {{ stats.patients }}</small></div>
+{% elif user.role_code == 'DOCTOR' %}
+  <a class="tile {{ 'off' if STAGE < 3 }}" href="{{ url_for('doctor_day') if STAGE >= 3 else '#' }}"><b>Приём пациентов</b><small>Пациенты на сегодня: {{ stats.today }}</small></a>
+{% elif user.role_code == 'NURSE' %}
+  <a class="tile {{ 'off' if STAGE < 3 }}" href="{{ url_for('nurse_procedures') if STAGE >= 3 else '#' }}"><b>Процедуры</b><small>Перечень назначений на день, отметка выполнения</small></a>
+{% elif user.role_code == 'PATIENT' %}
+  <a class="tile {{ 'off' if STAGE < 3 }}" href="{{ url_for('patient_cabinet') if STAGE >= 3 else '#' }}"><b>Личный кабинет</b><small>Мои записи, результаты, диагнозы и назначения</small></a>
+{% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,11 @@
+{% extends "base.html" %}{% block title %}Вход в систему{% endblock %}
+{% block content %}
+<div class="login-box"><fieldset><legend>Вход в систему</legend>
+<form method="post">
+  {% if error %}<div class="msg error">{{ error }}</div>{% endif %}
+  <div class="row"><label style="width:100%">Логин<input name="login" autofocus style="width:100%"></label></div>
+  <div class="row"><label style="width:100%">Пароль<input name="password" type="password" style="width:100%"></label></div>
+  <div class="actions"><button class="primary" type="submit">Войти</button></div>
+</form></fieldset>
+<p class="muted">Доступ к разделам определяется ролью учётной записи (требование Т13).</p></div>
+{% endblock %}

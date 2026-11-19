@@ -1,0 +1,13 @@
+{% extends "base.html" %}{% block title %}Процедуры{% endblock %}
+{% block content %}
+<h1>Перечень назначенных процедур – {{ day|ru_date(true) }}</h1>
+<form method="get" class="row"><label>Дата<input type="date" name="day" value="{{ day }}"></label><button type="submit">Показать</button></form>
+<table class="grid"><tr><th>Пациент</th><th>Процедура</th><th>Каб.</th><th>Сеансы</th><th>Указания врача</th><th>Назначил</th><th>Отметка о выполнении</th></tr>
+{% for r in rows %}<tr><td><b>{{ fio(r) }}</b></td><td>{{ r.proc_name }}<br><span class="muted">{{ r.rx_no }}</span></td><td>{{ r.cabinet_no }}</td>
+  <td>{{ r.done_count }} / {{ r.sessions }}</td><td>{{ r.instructions or '' }}</td><td>{{ r.d_last_name }} {{ r.d_first_name[0] }}.</td>
+  <td>{% if r.done_today %}<span class="tag DONE">выполнено сегодня</span>{% elif r.done_count < r.sessions %}
+    <form method="post" action="{{ url_for('nurse_execute', rx_no=r.rx_no) }}" class="row" style="margin:0">
+      <input type="hidden" name="day" value="{{ day }}"><input name="note" placeholder="примечание о реакции" style="width:170px"><button class="primary">Выполнено</button></form>
+  {% else %}<span class="tag DONE">курс завершён</span>{% endif %}</td></tr>
+{% else %}<tr><td colspan="7" class="muted">Назначенных процедур на эту дату нет</td></tr>{% endfor %}</table>
+{% endblock %}

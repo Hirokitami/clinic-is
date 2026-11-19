@@ -1,0 +1,28 @@
+{% extends "base.html" %}{% block title %}Приём пациента{% endblock %}
+{% block content %}
+<h1>Приём пациента</h1>
+{% if errors %}<div class="msgs"><div class="msg error">{{ errors.general or 'Результаты не сохранены: исправьте выделенные поля.' }}</div></div>{% endif %}
+<fieldset><legend>Запись</legend><div class="kv">
+  <div>Пациент</div><div><b>{{ fio(a) }}</b>, {{ a.birth_date|dmy }} <a href="{{ url_for('doctor_patient', iin=a.iin, appt=a.appt_no) }}">история пациента</a></div>
+  <div>Дата и время</div><div>{{ a.slot_date|ru_date }}, {{ a.time_start }}</div><div>Причина обращения</div><div>{{ a.reason }}</div>
+  <div>Статус</div><div><span class="tag {{ a.status_code }}">{{ a.status_name }}</span></div></div></fieldset>
+<form method="post">
+<fieldset><legend>Результаты приёма</legend>
+  <div class="{{ 'field-error' if errors.complaints }}"><label>Жалобы <span class="req-star">*</span><textarea name="complaints">{{ form.complaints }}</textarea></label>{% if errors.complaints %}<span class="ferr">{{ errors.complaints }}</span>{% endif %}</div>
+  <div class="row"><label class="{{ 'field-error' if errors.icd_code }}">Основной диагноз (МКБ-10) <span class="req-star">*</span>
+    <select name="icd_code" style="width:520px"><option value="">— выберите из справочника —</option>
+    {% for d in diagnoses %}<option value="{{ d.icd_code }}" {{ 'selected' if d.icd_code==form.icd_code }}>{{ d.icd_code }} – {{ d.name }}</option>{% endfor %}</select>
+    {% if errors.icd_code %}<span class="ferr">{{ errors.icd_code }}</span>{% endif %}</label></div>
+  <label>Заключение и рекомендации<textarea name="conclusion">{{ form.conclusion }}</textarea></label>
+</fieldset>
+<fieldset><legend>Назначения процедур</legend>
+<table class="grid"><tr><th>Процедура</th><th>Количество сеансов</th><th>Указания врача</th></tr>
+{% for r in rx_rows %}{% set i = loop.index0 %}<tr class="{{ 'field-error' if errors['rx%d'|format(i)] }}">
+  <td><select name="rx{{ i }}_code"><option value="">—</option>{% for p in procedures %}<option value="{{ p.procedure_code }}" {{ 'selected' if p.procedure_code==r.code }}>{{ p.name }}</option>{% endfor %}</select></td>
+  <td><input name="rx{{ i }}_sessions" value="{{ r.sessions }}" style="min-width:60px;width:80px">{% if errors['rx%d'|format(i)] %}<div class="ferr">{{ errors['rx%d'|format(i)] }}</div>{% endif %}</td>
+  <td><input name="rx{{ i }}_instr" value="{{ r.instr }}" style="width:100%"></td></tr>{% endfor %}</table>
+</fieldset>
+<div class="actions"><button class="primary" type="submit">Сохранить и завершить приём</button><a class="btn" href="{{ url_for('doctor_day', day=a.slot_date) }}">Отмена</a></div>
+<p class="muted">Автор и дата записи сохраняются автоматически (Т10): {{ user.display_name }}.</p>
+</form>
+{% endblock %}

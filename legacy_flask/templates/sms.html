@@ -1,0 +1,8 @@
+{% extends "base.html" %}{% block title %}Журнал SMS{% endblock %}
+{% block content %}
+<h1>Журнал SMS-подтверждений</h1>
+<p class="muted">SMS-шлюз не подключён: сообщения формируются и сохраняются в таблице sms_outbox в режиме имитации отправки.</p>
+<table class="grid"><tr><th>Дата и время</th><th>Запись</th><th>Телефон</th><th>Текст сообщения</th><th>Состояние</th></tr>
+{% for r in rows %}<tr><td>{{ r.created_at|dmy }}</td><td>{{ r.appt_no }}</td><td>{{ r.phone }}</td><td>{{ r.text }}</td><td>{{ r.status }}</td></tr>
+{% else %}<tr><td colspan="5" class="muted">Сообщений нет</td></tr>{% endfor %}</table>
+{% endblock %}

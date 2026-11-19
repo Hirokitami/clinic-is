@@ -1,0 +1,6 @@
+{% extends "base.html" %}{% block title %}{{ 'Не найдено' if not_found else 'Доступ запрещён' }}{% endblock %}
+{% block content %}
+{% if not_found %}<div class="msg warn">Страница не найдена или функция не реализована в текущей версии.</div>
+{% else %}<div class="msg error">Доступ запрещён: функция или данные недоступны для вашей роли (Т13).</div>{% endif %}
+<a class="btn" href="{{ url_for('index') }}">На главное окно</a>
+{% endblock %}

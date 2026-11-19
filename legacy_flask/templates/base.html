@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8">
+<title>{% block wtitle %}ИС медицинской клиники{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"></head>
+<body>
+<div class="window">
+  <div class="titlebar"><b>ИС медицинской клиники — {% block title %}{% endblock %}</b>
+    <span>{% if user %}{{ user.display_name }} · {{ ROLE_NAMES[user.role_code] }}{% endif %}</span></div>
+  {% if user %}
+  <nav class="menubar">
+    <a href="{{ url_for('index') }}" class="{{ 'active' if request.endpoint=='index' }}">Главное окно</a>
+    {% if user.role_code == 'OPERATOR' %}
+      {% if STAGE >= 2 %}<a href="{{ url_for('patient_new') }}" class="{{ 'active' if request.endpoint in ('patient_new','patient_edit') }}">Регистрация пациента</a>{% endif %}
+      <a href="{{ url_for('appointment_form') }}" class="{{ 'active' if request.endpoint in ('appointment_form','appointment_create') }}">Запись на приём</a>
+      {% if STAGE >= 2 %}<a href="{{ url_for('appointments_list') }}" class="{{ 'active' if request.endpoint in ('appointments_list','appointment_reschedule') }}">Список записей</a>{% endif %}
+      <a href="{{ url_for('sms_log') }}" class="{{ 'active' if request.endpoint=='sms_log' }}">Журнал SMS</a>
+    {% elif user.role_code == 'DOCTOR' and STAGE >= 3 %}
+      <a href="{{ url_for('doctor_day') }}" class="{{ 'active' if request.endpoint in ('doctor_day','doctor_visit','doctor_patient') }}">Приём пациентов</a>
+    {% elif user.role_code == 'NURSE' and STAGE >= 3 %}
+      <a href="{{ url_for('nurse_procedures') }}" class="{{ 'active' if request.endpoint=='nurse_procedures' }}">Процедуры</a>
+    {% elif user.role_code == 'PATIENT' and STAGE >= 3 %}
+      <a href="{{ url_for('patient_cabinet') }}" class="{{ 'active' if request.endpoint=='patient_cabinet' }}">Личный кабинет</a>
+    {% endif %}
+    <a class="right" href="{{ url_for('logout') }}">Выход</a>
+  </nav>
+  {% endif %}
+  <div class="content">
+    {% with fl = get_flashed_messages(with_categories=true) %}{% if fl %}<div class="msgs">
+      {% for cat, m in fl %}<div class="msg {{ 'ok' if cat=='message' else cat }}">{{ m }}</div>{% endfor %}</div>{% endif %}{% endwith %}
+    {% block content %}{% endblock %}
+  </div>
+  <div class="statusbar"><span>{% block status %}Готово{% endblock %}</span><span>Версия {{ VERSION }} · {{ today()|ru_date }}</span></div>
+</div>
+</body></html>

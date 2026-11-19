@@ -1,0 +1,22 @@
+{% extends "base.html" %}{% block title %}Перенос записи{% endblock %}
+{% block content %}
+<h1>Перенос записи № {{ a.appt_no }}</h1>
+<fieldset><legend>Текущая запись</legend><div class="kv">
+  <div>Пациент</div><div><b>{{ fio(a) }}</b></div><div>Врач</div><div>{{ a.spec_name }} {{ a.d_last_name }} {{ a.d_first_name }} {{ a.d_middle_name or '' }}</div>
+  <div>Дата и время</div><div>{{ a.slot_date|ru_date(true) }}, {{ a.time_start }}</div><div>Статус</div><div><span class="tag {{ a.status_code }}">{{ a.status_name }}</span></div></div></fieldset>
+<fieldset><legend>Новое время</legend>
+<form method="get" class="row"><label>Дата<input type="date" name="day" value="{{ day }}" min="{{ today() }}"></label><button type="submit">Показать расписание</button></form>
+<form method="post"><input type="hidden" name="day" value="{{ day }}">
+<table class="grid"><tr><th></th><th>Время</th><th>Кабинет</th><th>Состояние</th></tr>
+{% for s in slots %}{% set ok = is_bookable(s) %}<tr class="{{ 'sel' if s.slot_id==a.slot_id else ('free' if ok else 'busy') }}">
+  <td>{% if ok %}<input type="radio" name="slot" value="{{ s.slot_id }}" style="min-width:0">{% endif %}</td>
+  <td>{{ s.time_start }}–{{ s.time_end }}</td><td>{{ s.cabinet_no }}</td>
+  <td>{% if s.slot_id==a.slot_id %}текущая запись{% elif s.is_busy %}<span class="tag busy">занят</span>{% elif ok %}<span class="tag free">свободен</span>{% else %}<span class="muted">время прошло</span>{% endif %}</td></tr>
+{% else %}<tr><td colspan="4" class="muted">Врач не принимает в выбранную дату</td></tr>{% endfor %}</table>
+<div class="actions"><button class="primary" type="submit">Перенести</button><a class="btn" href="{{ url_for('appointments_list', iin=a.iin) }}">Отмена</a></div></form>
+</fieldset>
+<h2>История изменений записи (Т7)</h2>
+<table class="grid"><tr><th>Дата изменения</th><th>Действие</th><th>Было</th><th>Стало</th><th>Пользователь</th></tr>
+{% for h in history %}<tr><td>{{ h.changed_at|dmy }}</td><td>{{ h.action }}</td><td>{% if h.old_date %}{{ h.old_date|dmy }} {{ h.old_time }}{% endif %} {{ h.old_status or '' }}</td>
+<td>{% if h.new_date %}{{ h.new_date|dmy }} {{ h.new_time }}{% endif %} {{ h.new_status or '' }}</td><td>{{ h.changed_by }}</td></tr>{% endfor %}</table>
+{% endblock %}
